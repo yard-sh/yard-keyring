@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Keyring API checks, run against a fresh local server:
 #
-#   yard dev --reset-db --reset-objects      (in another terminal)
+#   yard dev --reset-db --reset-rooms      (in another terminal)
 #   tests/api.sh
 #
 # Every request picks its person with the yard_dev_identity cookie, exactly

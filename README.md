@@ -12,7 +12,7 @@ request's status changes on the tenant's screen the moment the landlord
 moves it. The pieces:
 
 - **Frontend:** a static app in plain ES modules, with no build step.
-- **Backend:** one fetch handler, plus one realtime object per property.
+- **Backend:** one fetch handler, plus one realtime room per property.
 - **Storage:** a per-project SQLite database.
 - **Sign-in:** Yard Auth.
 - **Pricing:** one Landlord tier at $50 a month, with a 14-day trial that
@@ -25,7 +25,7 @@ Yard subscription for whoever runs a copy of Keyring.
 
 Use the button above, or paste this repository's URL into the **Create from
 GitHub URL** field of the Yard dashboard's Create Project dialog. Keyring
-declares objects (realtime rooms inside a service) and a custom landing page.
+declares rooms (realtime state inside a service) and a custom landing page.
 Both are part of Yard Pro, so creating it needs a Pro plan. The service is
 `authenticated`, so it also needs Yard Auth, and the Landlord tier is a
 subscription with a free trial, which the team's plan must allow.
@@ -38,12 +38,12 @@ Once it's live:
 ## Layout
 
     .yard/
-      settings.json       every project setting: service, object class, landing page, pricing
+      settings.json       every project setting: service, room class, landing page, pricing
       migrations/         properties, units, leases, invites, charges, payments, requests, announcements
       landing-page/       the public page, with a keyring you can jingle and pricing built from the tiers
       dev/                local state written by yard dev; ignored by git
     app/                  the deployable bundle (the services[] entry with dir: app)
-      _service.js         the whole backend: the fetch handler and the Property object
+      _service.js         the whole backend: the fetch handler and the Property room class
       index.html          app shell: top bar, demo strip, icon sprite
       app.js              boot, routing, portal switch, account menu, invite links, the live connection
       landlord.js         portfolio, rent roll, one unit (lease, people, ledger), property settings
@@ -56,23 +56,23 @@ Once it's live:
       styles.css          evergreen & brass tokens, light and dark
     tests/                curl and Playwright checks against yard dev; not deployed
 
-The service entry declares its mount, access mode, database, and object class:
+The service entry declares its mount, access mode, database, and room class:
 
     "services": [
       { "dir": "app", "name": "app", "url": "/app",
         "access": "authenticated", "database_access": true,
-        "objects": [{ "class": "Property", "binding": "PROPERTIES" }] }
+        "rooms": [{ "class": "Property", "binding": "PROPERTIES" }] }
     ]
 
 ## How it fits together
 
-**One property is one object.** `_service.js` exports a class called
+**One property is one room.** `_service.js` exports a class called
 `Property`.
 
 - Yard keeps one instance of it per property, reached through `env.PROPERTIES`.
 - The landlord and every tenant with that property open are connected to that
   same instance, and it relays what happens there to the people it concerns.
-- The object's socket tags make that routing a lookup, not a loop: the
+- The room's socket tags make that routing a lookup, not a loop: the
   landlord's sockets carry `landlord` and a tenant's carry `lease:<id>`, so a
   payment on one lease reaches that lease's roommates and the landlord and
   nobody else in the building. Announcements go to everyone.
@@ -83,7 +83,7 @@ are the people on a running lease there. Anything you're not part of answers
 404, the same as something that doesn't exist, so ids can't be probed. The
 socket route, `GET api/properties/:id/ws`, does the same check, strips any
 client-sent `X-Keyring-*` headers, stamps trusted ones (role, leases, name)
-and forwards the upgrade. The object trusts `X-Keyring-*` the way it trusts
+and forwards the upgrade. The room trusts `X-Keyring-*` the way it trusts
 `X-Yard-*`. The edge honors the session only for requests from the project's
 own pages, so a socket opened from any other site arrives signed out and is
 turned away.
@@ -145,7 +145,7 @@ a tenant opening it twice, doesn't use it up.
 **Comments are written once per burst.** Replies on a request go to
 `POST api/tickets/:id/comments`, where the handler checks access and the
 landlord's plan against the database. It hands the comment to the property's
-object, which:
+room, which:
 
 - stores it in its own SQL buffer,
 - relays it to the landlord and that lease at once,
@@ -154,7 +154,7 @@ object, which:
 Five seconds later, `alarm()` writes everything buffered to `ticket_events` in
 one batch (`INSERT OR IGNORE` on the comment's own id, so a retried flush
 writes nothing twice) and only then deletes those rows from the buffer.
-Reading a thread asks the object for its buffer first and the database second,
+Reading a thread asks the room for its buffer first and the database second,
 and merges by id: a comment that has left the buffer by the time it's asked is
 already in the database when that's read. Typing indicators are the only
 frames a client sends over the socket; they are relayed, throttled to one
@@ -168,7 +168,7 @@ repainted. Every connection starts with `hello`, and the view re-fetches then
 too, which is how a tab catches up after any reconnect.
 
 **Losing access takes effect now.** Removing a tenant or ending a lease asks
-the property's object to close that person's sockets:
+the property's room to close that person's sockets:
 
     4003  removed: no lease left in this property     the client stops and says so
     4004  access changed: another lease still here    the client reconnects
@@ -192,7 +192,7 @@ Two details worth knowing before editing:
   `fetch("api/me")`, never `/api/me`. Routes live in `location.hash`, and the
   socket URL is built from `location.href`.
 - **The class name is the identity.** Renaming `Property` in `settings.json`
-  deletes every property object on the next deploy, with any comments still
+  deletes every property room on the next deploy, with any comments still
   in its buffer; `yard push` warns before it does. Change the `binding` if
   only the name in `env` should change.
 
@@ -202,7 +202,7 @@ Two details worth knowing before editing:
 
 This serves the landing page at `http://localhost:9875/keyring/` and the app
 at `http://localhost:9875/keyring/app/`. The migration is applied to a local
-database, and property objects are stored under `.yard/dev/objects/`.
+database, and property rooms are stored under `.yard/dev/rooms/`.
 
 There is no sign-up screen and no login code in this repo: Yard Auth signs
 people in and hands the service trusted `X-Yard-*` headers. Locally, a
@@ -228,7 +228,7 @@ people in and hands the service trusted `X-Yard-*` headers. Locally, a
 Every save restarts the local runtime, which drops every open socket. The
 client reconnects on its own, the same way it does when a hosted session
 reaches its 24-hour limit. `yard dev --reset-db` starts from an empty database
-and `--reset-objects` deletes every stored object.
+and `--reset-rooms` deletes every stored room.
 
 With `--offline`, `yard dev` makes up the project's public data from
 `settings.json`, and today it leaves out the tier's price, pricing model,
@@ -239,7 +239,7 @@ when a paid tier comes through as $0, so the pricing card still reads right.
 
 Both suites run against a local server:
 
-    yard dev --reset-db --reset-objects      # in another terminal
+    yard dev --reset-db --reset-rooms        # in another terminal
     tests/api.sh                             # curl + jq, 81 checks
     cd tests && npm ci && npx playwright test
 
@@ -254,7 +254,7 @@ Both suites run against a local server:
   flush, and a tenant's open page closing when they lose access.
 
 The Playwright config starts `yard dev` itself if nothing is listening, and
-empties the local database and objects before every run.
+empties the local database and rooms before every run.
 
 ## Logging
 
@@ -280,7 +280,7 @@ Every line starts with `[keyring]` and is one event:
 - `ticket.create|status|withdraw`, `comment.post`
 - `ws.forward`
 
-**Object events:**
+**Room events:**
 
 - `property.wake|full|tombstone|deleted`
 - `peer.join|leave|error`, `frame.rejected`, `typing.rejected`
@@ -295,13 +295,13 @@ paths.
 
 ## Usage and cost
 
-Objects are metered: requests, compute time while something is handled, and
+Rooms are metered: requests, compute time while something is handled, and
 stored bytes. A property that holds sockets but sees no activity costs no
-compute. What costs an object request:
+compute. What costs a room request:
 
 - every write someone else should see (a payment, a charge, a request, a
   status change, an announcement, a claimed invite): one relay each,
-- every comment (the object buffers it), and every thread opened (the
+- every comment (the room buffers it), and every thread opened (the
   handler reads the buffer),
 - each socket connection.
 
@@ -328,14 +328,14 @@ apply themselves at deploy. To try a release before anyone else sees it:
     yard service open --sandbox preview         team-only URL
     yard sandbox unpin                          go live
 
-A sandbox has its own database, its own property objects and its own
+A sandbox has its own database, its own property rooms and its own
 simulated commerce, so the Landlord trial and checkout can be tried there end
 to end without money moving.
 
 ## Data lifecycle
 
 - **Deleting a property** needs its name typed. It removes every row of the
-  property in one batch, then tells its object to close every socket, drop its
+  property in one batch, then tells its room to close every socket, drop its
   storage and keep a small tombstone, so a connection already on its way can't
   reopen it.
 - **Deleting a unit** is possible only while it's vacant, and takes its past
@@ -344,7 +344,7 @@ to end without money moving.
   access, and its unused invite links are deleted.
 - **Removing a tenant** keeps the lease and its ledger as they are.
 - **Withdrawing a request** deletes it and its thread; a comment still in the
-  object's buffer for it is dropped at the next flush.
+  room's buffer for it is dropped at the next flush.
 - **Removing the `Property` class** from `settings.json` deletes every
-  property object at the next deploy, including comments not yet flushed.
-- **Removing the whole service** keeps object data for 30 days.
+  property room at the next deploy, including comments not yet flushed.
+- **Removing the whole service** keeps room data for 30 days.

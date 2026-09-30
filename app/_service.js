@@ -10,8 +10,8 @@
 // Two things live in this file. The default export is the fetch handler:
 // properties, units, leases, invites, the rent ledger and its simulated
 // payments, announcements and maintenance requests, all in env.DB. The
-// Property class is an object: one instance per property, declared under
-// "objects" in .yard/settings.json and reached through env.PROPERTIES. It
+// Property class is a room class: one room per property, declared under
+// "rooms" in .yard/settings.json and reached through env.PROPERTIES. It
 // holds every open connection to that property, relays what happens there to
 // the people it concerns, and buffers request comments until its alarm writes
 // them to the database in one batch.
@@ -45,7 +45,7 @@ const LIMITS = {
   announcements: 200, // posts in one property
   charges: 200, // one-off charges on one lease
   payItems: 36, // items settled by one payment
-  pending: 1000, // comments one object holds before its flush
+  pending: 1000, // comments one room holds before its flush
   peers: 300, // connections to one property at once
 };
 
@@ -72,7 +72,7 @@ const RENT_HISTORY_MONTHS = 120; // rent items one ledger computes, at most
 const OVERDUE_AFTER_MS = DAY_MS; // unpaid past the end of its due day
 const FLUSH_MS = 5000;
 const FLUSH_ROWS = 100;
-const FANOUT = 20; // object calls in flight at once
+const FANOUT = 20; // room calls in flight at once
 
 // Close codes the client understands. None of the first three reconnect;
 // 4004 does, and learns what changed from the database on the way back in.
@@ -509,8 +509,8 @@ async function updateProperty(c, access) {
   return propertyDetail(c, { ...access, property: { ...access.property, ...fields } });
 }
 
-// The rows go first, so nobody can reconnect while the object is being
-// cleared; then the object closes every socket and drops its storage. The
+// The rows go first, so nobody can reconnect while the room is being
+// cleared; then the room closes every socket and drops its storage. The
 // typed name is checked here too, so a stray API call can't do what the
 // dialog makes deliberate.
 async function deleteProperty(c, access) {
@@ -1728,8 +1728,8 @@ async function createTicket(c, access) {
   return json({ id, lease_id: lease.id, status: "submitted" }, 201);
 }
 
-// The thread is the database's rows plus whatever the property's object is
-// still holding for its next flush. The object is asked first and the
+// The thread is the database's rows plus whatever the property's room is
+// still holding for its next flush. The room is asked first and the
 // database second: the flush writes to the database before it deletes from
 // its buffer, so a comment that has left the buffer by the time we ask is
 // already in the database when we read it. Asked the other way round, a
@@ -1846,8 +1846,8 @@ async function withdrawTicket(c, access) {
 }
 
 // Comments are checked here, against the database and the landlord's live
-// plan, then handed to the property's object, which relays them at once and
-// writes them to the database in one batch per burst. The object's reply is
+// plan, then handed to the property's room, which relays them at once and
+// writes them to the database in one batch per burst. The room's reply is
 // the stored comment, so the author's tab needs no separate acknowledgement.
 async function postComment(c, access) {
   const { env } = c;
@@ -1878,7 +1878,7 @@ async function postComment(c, access) {
 // The realtime route. propertyAccess already confirmed, from the database on
 // this very request, that the caller is the landlord or on a running lease
 // here. The X-Keyring-* headers are set after stripping anything a client
-// sent, so the object can trust them the way it trusts X-Yard-*. The edge
+// sent, so the room can trust them the way it trusts X-Yard-*. The edge
 // only signs in sockets opened from this project's own pages, so another
 // site can't open one as a signed-in visitor.
 async function connectProperty(c, access) {
@@ -1895,20 +1895,20 @@ async function connectProperty(c, access) {
   headers.set("X-Keyring-Leases", access.leases.join(","));
   headers.set("X-Keyring-Name", encodeURIComponent(c.me.name));
   log("ws.forward", { property: shortId(access.property.id), user: shortId(c.user), role: access.role });
-  return objectFor(env, access.property.id).fetch(new Request(request, { headers }));
+  return roomFor(env, access.property.id).fetch(new Request(request, { headers }));
 }
 
-function objectFor(env, propertyId) {
+function roomFor(env, propertyId) {
   return env.PROPERTIES.get(env.PROPERTIES.idFromName(propertyId));
 }
 
-// Handler-to-object calls that are not upgrades. Clients cannot reach the
-// object directly (the handler only forwards the upgrade), so paths under
+// Handler-to-room calls that are not upgrades. Clients cannot reach the
+// room directly (the handler only forwards the upgrade), so paths under
 // /__ are private by construction. Every call names the property, so an
-// object that has never had a socket still knows whose it is.
+// room that has never had a socket still knows whose it is.
 async function internal(env, propertyId, path, body) {
   try {
-    return await objectFor(env, propertyId).fetch("https://keyring.internal" + path, {
+    return await roomFor(env, propertyId).fetch("https://keyring.internal" + path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...body, property_id: propertyId }),
@@ -1919,10 +1919,10 @@ async function internal(env, propertyId, path, body) {
   }
 }
 
-// A read, so a GET: the comments the object hasn't flushed yet.
+// A read, so a GET: the comments the room hasn't flushed yet.
 async function pendingComments(env, propertyId, ticketId) {
   try {
-    const res = await objectFor(env, propertyId).fetch("https://keyring.internal/__pending?ticket=" + ticketId);
+    const res = await roomFor(env, propertyId).fetch("https://keyring.internal/__pending?ticket=" + ticketId);
     return res.ok ? await res.json() : [];
   } catch (err) {
     console.error(`[keyring] internal.failed path=/__pending property=${shortId(propertyId)}`, err && err.stack);
@@ -1970,11 +1970,11 @@ async function kickUsers(env, propertyId, userIds) {
 // instance fields are a cache at best: what matters is in ctx.storage (the
 // comment buffer, meta) or attached to a connection.
 //
-// Over the socket, the object only ever sends, apart from one thing it
+// Over the socket, the room only ever sends, apart from one thing it
 // receives: typing indicators. Everything that changes data arrives through
 // the handler, which checked access in the database first.
 //
-//   object → client                                   client → object
+//   room → client                                     client → room
 //   hello { cid, role }                                typing { ticket_id, lease_id }
 //   comment { ticket_id, comment }
 //   typing { ticket_id, user_id, name }

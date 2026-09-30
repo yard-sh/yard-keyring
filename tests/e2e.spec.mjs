@@ -171,7 +171,7 @@ test("the thread survives a reload, before and after its flush", async () => {
   const tenant = people.tenant;
   await tenant.reload();
   await expect(tenant.locator("[data-comment]")).toHaveCount(2);
-  await tenant.waitForTimeout(6000); // the object writes comments to the database every 5 s
+  await tenant.waitForTimeout(6000); // the room writes comments to the database every 5 s
   await tenant.reload();
   await expect(tenant.locator("[data-comment]")).toHaveCount(2);
 });

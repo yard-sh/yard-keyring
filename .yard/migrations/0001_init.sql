@@ -9,7 +9,7 @@
 -- payments, requests and their threads, announcements.
 --
 -- Comments on a request reach this database late on purpose: each property's
--- object buffers them and writes one batch per burst from its alarm.
+-- room buffers them and writes one batch per burst from its alarm.
 --
 -- Times are milliseconds since the epoch, written by the service. Calendar
 -- dates (lease start and end, due dates) are UTC midnight of that day.
@@ -176,7 +176,7 @@ CREATE INDEX IF NOT EXISTS idx_announcements_property ON announcements (property
 
 -- Maintenance requests ("tickets" in code; the app says Requests). status is
 -- submitted, acknowledged, in_progress or resolved; only the landlord moves
--- it. comment_count and updated_at are refreshed by the object's flush.
+-- it. comment_count and updated_at are refreshed by the room's flush.
 CREATE TABLE IF NOT EXISTS tickets (
   id            TEXT PRIMARY KEY,
   property_id   TEXT NOT NULL,
@@ -198,7 +198,7 @@ CREATE INDEX IF NOT EXISTS idx_tickets_lease ON tickets (lease_id, created_at);
 
 -- A request's thread: kind 'status' rows (written by the handler in the same
 -- batch as the status change) and kind 'comment' rows (written by the
--- object's flush). Comment ids come from the object, so a retried flush
+-- room's flush). Comment ids come from the room, so a retried flush
 -- inserts nothing twice. Author names are joined from users when read, so a
 -- rename shows up everywhere.
 CREATE TABLE IF NOT EXISTS ticket_events (

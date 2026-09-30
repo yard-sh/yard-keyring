@@ -1,7 +1,7 @@
 // Playwright runs against `yard dev` on its default port. Start it yourself
-// (`yard dev --reset-db --reset-objects` from the repository root) or let
+// (`yard dev --reset-db --reset-rooms` from the repository root) or let
 // the webServer entry below start it. globalSetup empties the local database
-// and objects either way, so every run starts from nothing.
+// and rooms either way, so every run starts from nothing.
 import { defineConfig } from "@playwright/test";
 
 const proxy = process.env.HTTPS_PROXY;
@@ -26,7 +26,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "yard dev --reset-db --reset-objects",
+    command: "yard dev --reset-db --reset-rooms",
     cwd: "..",
     url: "http://localhost:9875/keyring/",
     reuseExistingServer: true,
