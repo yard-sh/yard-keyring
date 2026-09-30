@@ -1,0 +1,13 @@
+{
+  "name": "keyring-tests",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end checks for Keyring against a local `yard dev`. Not deployed.",
+  "scripts": {
+    "e2e": "playwright test",
+    "api": "bash api.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
