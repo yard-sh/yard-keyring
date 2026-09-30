@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Keyring · Every door, one ring</title>
+    <meta
+      name="description"
+      content="Keyring is a landlord and tenant portal. Landlords run buildings, units, leases and rent; tenants see their unit, pay, and ask for repairs. Live, in one place."
+    />
+    <link rel="icon" href="keyring.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Martian+Mono:wght@400..600&display=swap"
+    />
+    <script>
+      // Same stored theme as the app, applied before the first paint.
+      try {
+        const theme = localStorage.getItem("keyring.theme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="landing.css" />
+    <!-- window.yard (project data, ownership) is injected by the Yard edge. -->
+  </head>
+  <body>
+    <p class="demo" role="note">
+      <strong>A Yard template.</strong> Rent payments inside Keyring are simulated with test cards: no real money moves.
+    </p>
+
+    <header class="nav" id="nav">
+      <a class="brand" href="./" aria-label="Keyring">
+        <img class="brand__mark" src="keyring.svg" alt="" width="32" height="32" />
+        <span class="brand__word">keyring</span>
+      </a>
+      <nav class="nav__links" aria-label="Page">
+        <a href="#portals">Landlords &amp; tenants</a>
+        <a href="#how">How it works</a>
+        <a href="#pricing">Pricing</a>
+      </nav>
+      <div class="nav__end">
+        <button class="themebtn" id="theme" type="button" aria-label="Switch theme">
+          <svg class="icon icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" />
+          </svg>
+          <svg class="icon icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
+          </svg>
+        </button>
+        <!-- Filled by landing.js once Yard Auth answers, so nobody sees the wrong button flash. -->
+        <div class="auth" id="auth"></div>
+      </div>
+    </header>
+
+    <main>
+      <!-- ------------------------------------------------------------ hero -->
+      <section class="hero">
+        <div class="hero__copy">
+          <p class="eyebrow">A landlord &amp; tenant portal</p>
+          <h1 class="display">Every door,<br />one <span class="display__ring">ring</span>.</h1>
+          <p class="lede">
+            Landlords run buildings, units, leases and rent. Tenants see their unit, pay what's due and ask for repairs.
+            Both sides see the same thing, the moment it happens.
+          </p>
+          <div class="hero__cta">
+            <a class="btn btn--brass btn--lg" data-portal="l" id="heroLandlord" href="app/#/l">Landlord login</a>
+            <a class="btn btn--ghost btn--lg" data-portal="t" id="heroTenant" href="app/#/t">Tenant login</a>
+          </div>
+          <p class="hero__fine">Free for tenants · $50 a month for landlords · 14-day trial, no card</p>
+        </div>
+
+        <!-- The keyring. landing.js swings the tags with a small spring
+             simulation; each tag is a button that flips to a pretend status.
+             Without JS (or with reduced motion) it hangs still. -->
+        <figure class="ring" id="ring" aria-label="A keyring of unit tags. Press a tag to flip it.">
+          <svg class="ring__loop" viewBox="0 0 220 220" aria-hidden="true">
+            <circle cx="110" cy="110" r="92" />
+          </svg>
+          <div class="ring__tags" id="tags">
+            <button
+              class="ktag"
+              type="button"
+              data-front="1A"
+              data-back="Paid"
+              data-note="October rent"
+              data-tone="paid"
+              aria-pressed="false"
+            >
+              <span class="ktag__inner"
+                ><span class="ktag__face ktag__face--front"></span><span class="ktag__face ktag__face--back"></span
+              ></span>
+            </button>
+            <button
+              class="ktag"
+              type="button"
+              data-front="2B"
+              data-back="Due"
+              data-note="Nov 1 · $1,850"
+              data-tone="due"
+              aria-pressed="false"
+            >
+              <span class="ktag__inner"
+                ><span class="ktag__face ktag__face--front"></span><span class="ktag__face ktag__face--back"></span
+              ></span>
+            </button>
+            <button
+              class="ktag"
+              type="button"
+              data-front="3C"
+              data-back="Fixed"
+              data-note="Kitchen sink"
+              data-tone="fixed"
+              aria-pressed="false"
+            >
+              <span class="ktag__inner"
+                ><span class="ktag__face ktag__face--front"></span><span class="ktag__face ktag__face--back"></span
+              ></span>
+            </button>
+            <button
+              class="ktag"
+              type="button"
+              data-front="4D"
+              data-back="Invited"
+              data-note="2 links out"
+              data-tone="invite"
+              aria-pressed="false"
+            >
+              <span class="ktag__inner"
+                ><span class="ktag__face ktag__face--front"></span><span class="ktag__face ktag__face--back"></span
+              ></span>
+            </button>
+            <button
+              class="ktag"
+              type="button"
+              data-front="PH"
+              data-back="Notice"
+              data-note="Water off Fri"
+              data-tone="notice"
+              aria-pressed="false"
+            >
+              <span class="ktag__inner"
+                ><span class="ktag__face ktag__face--front"></span><span class="ktag__face ktag__face--back"></span
+              ></span>
+            </button>
+          </div>
+          <figcaption class="ring__hint">Give it a jingle. Tap a tag to flip it.</figcaption>
+        </figure>
+      </section>
+
+      <!-- --------------------------------------------------------- portals -->
+      <section class="portals" id="portals">
+        <article class="portal portal--landlord">
+          <p class="eyebrow eyebrow--light">For landlords</p>
+          <h2 class="h2">The whole building on one screen.</h2>
+          <p class="body">
+            A rent roll that adds itself up, every lease with its people and its ledger, and a request queue you can
+            move along with one click.
+          </p>
+          <div class="mock mock--roll" aria-hidden="true">
+            <div class="mock__stats">
+              <span><small>Occupied</small><b>11/12</b></span>
+              <span><small>Collected</small><b>$19,240</b></span>
+              <span><small>Outstanding</small><b class="is-late">$1,850</b></span>
+            </div>
+            <div class="mock__row">
+              <i class="tag">101</i><span>Ines, Sam</span><em class="pill pill--paid">Paid up</em>
+            </div>
+            <div class="mock__row"><i class="tag">102</i><span>Rex</span><em class="pill pill--late">Overdue</em></div>
+            <div class="mock__row">
+              <i class="tag">2A</i><span>Priya</span><em class="pill pill--due">Due Nov 1</em>
+            </div>
+            <div class="mock__row mock__row--vacant">
+              <i class="tag">PH</i><span>Vacant</span><em class="pill pill--vacant">Start a lease</em>
+            </div>
+          </div>
+          <ul class="facts">
+            <li>Add units in bulk: <code>101-110, 2A-2F</code></li>
+            <li>One invite link per tenant, good for one person, for 14 days</li>
+            <li>Deposits, late fees, utilities; record the checks you get</li>
+          </ul>
+        </article>
+
+        <article class="portal portal--tenant">
+          <p class="eyebrow">For tenants</p>
+          <h2 class="h2">Your unit, your bill, your landlord.</h2>
+          <p class="body">
+            Open the link your landlord sends, sign in, and your home is there: what you owe, what's coming, what's
+            being fixed, and what's happening in the building.
+          </p>
+          <div class="mock mock--home" aria-hidden="true">
+            <div class="mock__bill">
+              <small>You owe</small>
+              <b>$1,850.00</b>
+              <span>October rent, due Oct 1</span>
+              <i class="mock__pay">Pay $1,850.00</i>
+            </div>
+            <div class="mock__hanger">
+              <i class="mock__loop"></i><i class="mock__bigtag"><small>Unit</small>2A</i>
+            </div>
+          </div>
+          <ul class="facts">
+            <li>Free, always: tenants never pay for Keyring</li>
+            <li>Roommates share one bill; a payment can't land twice</li>
+            <li>Requests with a live thread to your landlord</li>
+          </ul>
+        </article>
+      </section>
+
+      <!-- ----------------------------------------------------- how it works -->
+      <section class="how" id="how">
+        <div class="wrap">
+          <h2 class="h2">Three keys and you're in.</h2>
+          <ol class="steps">
+            <li>
+              <span class="steptag">01</span>
+              <h3>Hang up your building</h3>
+              <p>Name the property, add its units, and fill in the contact card your tenants will see.</p>
+            </li>
+            <li>
+              <span class="steptag">02</span>
+              <h3>Start a lease, send the links</h3>
+              <p>Set the rent and the due day, then send each tenant their link. Whoever signs in with it moves in.</p>
+            </li>
+            <li>
+              <span class="steptag">03</span>
+              <h3>Let it run itself</h3>
+              <p>
+                Rent shows up on the 1st, repair requests land in your queue, and announcements reach every home at
+                once.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------------------- spreads -->
+      <section class="spread">
+        <div class="wrap spread__grid">
+          <div>
+            <h2 class="h2">Repairs, out in the open.</h2>
+            <p class="body">
+              A tenant files a request; you see it the second they press send. Move it from submitted to resolved, and
+              talk it through in a thread that updates live on both ends, typing dots included.
+            </p>
+          </div>
+          <div class="thread" aria-hidden="true">
+            <div class="thread__flow">
+              <b class="is-done">Submitted</b><b class="is-on">Acknowledged</b><b>In progress</b><b>Resolved</b>
+            </div>
+            <p class="thread__msg">Kitchen sink drips, worse at night.</p>
+            <p class="thread__msg thread__msg--mine">Plumber Thursday morning. OK to let him in?</p>
+            <p class="thread__typing">
+              Sam is typing<span class="dots"><i></i><i></i><i></i></span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="spread spread--flip">
+        <div class="wrap spread__grid">
+          <div class="notice" aria-hidden="true">
+            <p class="notice__pin">Pinned</p>
+            <p class="notice__title">Water off Friday, 9 to noon</p>
+            <p class="notice__body">The plumber is replacing the main valve. Fill a kettle!</p>
+            <p class="notice__reach">Reached 24 homes · just now</p>
+          </div>
+          <div>
+            <h2 class="h2">Say it once, to everyone.</h2>
+            <p class="body">
+              Announcements post to every tenant's home page at once. Pin the one that matters; it stays on top until
+              you say otherwise.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------------------- pricing -->
+      <section class="pricing" id="pricing">
+        <div class="wrap">
+          <h2 class="h2">Tenants never pay. Landlords pay one flat price.</h2>
+          <div class="plans" id="plans">
+            <article class="plan">
+              <h3 class="plan__name">Tenant</h3>
+              <p class="plan__price"><span class="plan__amount">$0</span><small>forever</small></p>
+              <p class="plan__desc">Invited by your landlord. Sign in with a Yard account and your unit is there.</p>
+              <ul class="plan__features">
+                <li>Your unit, lease and bill</li>
+                <li>Pay rent (simulated in this demo)</li>
+                <li>Repair requests with a live thread</li>
+                <li>Building announcements</li>
+              </ul>
+              <a class="btn btn--ghost plan__cta" data-portal="t" href="app/#/t">Tenant login</a>
+            </article>
+
+            <article class="plan plan--landlord" id="landlordPlan">
+              <p class="plan__badge" id="planBadge" hidden>Your plan</p>
+              <h3 class="plan__name" data-name>Landlord</h3>
+              <p class="plan__price">
+                <span class="plan__amount" data-amount>$50</span><small data-per>/ month</small>
+              </p>
+              <p class="plan__desc" data-blurb>Run your buildings from one ring. Tenants never pay.</p>
+              <ul class="plan__features" data-features>
+                <li>Up to 25 properties, 300 units each</li>
+                <li>Rent roll with live collections</li>
+                <li>Invite links for up to 6 tenants per lease</li>
+                <li>Maintenance requests with live threads</li>
+                <li>Announcements to every tenant</li>
+                <li>Light and dark</li>
+              </ul>
+              <!-- data-action buttons are Yard's checkout and trial; landing.js
+                   sets the tier id from window.yard.project.tiers. -->
+              <div class="plan__buy" data-yard-when="not_owned">
+                <button class="btn btn--brass plan__cta" type="button" data-action="trial" id="trialBtn" hidden>
+                  Start a 14-day free trial
+                </button>
+                <button
+                  class="btn btn--ghost plan__cta"
+                  type="button"
+                  data-action="checkout"
+                  data-interval="monthly"
+                  id="buyBtn"
+                >
+                  Subscribe for $50 / month
+                </button>
+              </div>
+              <div class="plan__buy" data-yard-when="owned">
+                <a class="btn btn--brass plan__cta" data-portal="l" href="app/#/l">Open the landlord portal</a>
+              </div>
+            </article>
+          </div>
+          <p class="pricing__note">
+            <strong>About this demo.</strong> The Landlord plan above is a real Yard subscription for whoever runs this
+            copy of Keyring. Rent paid by tenants inside the app is not: it is simulated with test cards, and no money
+            changes hands.
+          </p>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------------------------- closer -->
+      <section class="closer">
+        <div class="wrap">
+          <h2 class="display display--small">Hang your first key.</h2>
+          <div class="hero__cta">
+            <a class="btn btn--brass btn--lg" data-portal="l" id="closerLandlord" href="app/#/l">Landlord login</a>
+            <a class="btn btn--ghost btn--lg" data-portal="t" id="closerTenant" href="app/#/t">Tenant login</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot__row">
+        <a class="brand" href="./">
+          <img class="brand__mark" src="keyring.svg" alt="" width="26" height="26" />
+          <span class="brand__word">keyring</span>
+        </a>
+        <p class="foot__note">A Yard template. Hosted, signed in and sold with <a href="https://yard.sh">Yard</a>.</p>
+        <a class="foot__link" id="footAuth" data-portal="t" href="app/#/t">Log in</a>
+      </div>
+    </footer>
+
+    <script src="landing.js"></script>
+  </body>
+</html>
