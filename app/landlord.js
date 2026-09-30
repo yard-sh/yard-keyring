@@ -1258,8 +1258,20 @@ export async function settings(ctx, propertyId) {
         f.elements.confirm.addEventListener("input", check);
         check();
       },
-      onSubmit: (f) =>
-        api("api/properties/" + propertyId, { method: "DELETE", body: { confirm_name: f.elements.confirm.value } }),
+      // Let go of the property's socket first: the delete closes every socket
+      // with "deleted", and this tab knows that already.
+      onSubmit: async (f) => {
+        ctx.live.follow(null);
+        try {
+          return await api("api/properties/" + propertyId, {
+            method: "DELETE",
+            body: { confirm_name: f.elements.confirm.value },
+          });
+        } catch (err) {
+          ctx.live.follow(propertyId);
+          throw err;
+        }
+      },
     });
     if (!res) return;
     await ctx.refreshMe();
