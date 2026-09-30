@@ -86,8 +86,18 @@ const CATEGORIES = ["plumbing", "electrical", "appliance", "heating", "pest", "o
 const STATUSES = ["submitted", "acknowledged", "in_progress", "resolved"];
 const CHARGE_KINDS = { deposit: "Security deposit", late_fee: "Late fee", utilities: "Utilities", other: "Charge" };
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 // The simulated card network. The browser maps a test card number to one of
@@ -128,10 +138,7 @@ export default {
         });
         return response;
       } catch (err) {
-        console.error(
-          `[keyring] request.failed ${request.method} ${redactPath(url.pathname)}`,
-          err && err.stack,
-        );
+        console.error(`[keyring] request.failed ${request.method} ${redactPath(url.pathname)}`, err && err.stack);
         return fail(500, "server_error", "something went wrong on our end");
       }
     }
@@ -301,9 +308,7 @@ function defaultName(user, email) {
 async function getMe(c) {
   const { env, user } = c;
   const [properties, leases] = await Promise.all([
-    env.DB.prepare("SELECT id, name FROM properties WHERE landlord_id = ?1 ORDER BY created_at")
-      .bind(user)
-      .all(),
+    env.DB.prepare("SELECT id, name FROM properties WHERE landlord_id = ?1 ORDER BY created_at").bind(user).all(),
     env.DB.prepare(
       "SELECT l.id, l.property_id, p.name AS property_name, un.number AS unit_number" +
         " FROM lease_tenants t JOIN leases l ON l.id = t.lease_id" +
@@ -443,7 +448,13 @@ function propertyFields(body, current) {
 async function createProperty(c) {
   const { env, user } = c;
   if (!c.me.landlord_plan) return planRequired(c);
-  const fields = propertyFields(await readJSON(c.request), { name: "", address: "", phone: "", emergency: "", hours: "" });
+  const fields = propertyFields(await readJSON(c.request), {
+    name: "",
+    address: "",
+    phone: "",
+    emergency: "",
+    hours: "",
+  });
   if (!fields.name) return fail(400, "name_required", "give the property a name");
 
   const owned = await env.DB.prepare("SELECT COUNT(*) AS n FROM properties WHERE landlord_id = ?1").bind(user).first();
@@ -549,13 +560,17 @@ async function rentRoll(c, access) {
     )
       .bind(pid)
       .all(),
-    env.DB.prepare(`SELECT lease_id, from_month, rent_cents FROM rent_steps WHERE lease_id IN (${running}) ORDER BY from_month`)
+    env.DB.prepare(
+      `SELECT lease_id, from_month, rent_cents FROM rent_steps WHERE lease_id IN (${running}) ORDER BY from_month`,
+    )
       .bind(pid)
       .all(),
     env.DB.prepare(`SELECT id, lease_id, kind, label, amount_cents, due_at FROM charges WHERE lease_id IN (${running})`)
       .bind(pid)
       .all(),
-    env.DB.prepare(`SELECT lease_id, item_ref, label, amount_cents, paid_at FROM payments WHERE lease_id IN (${running})`)
+    env.DB.prepare(
+      `SELECT lease_id, item_ref, label, amount_cents, paid_at FROM payments WHERE lease_id IN (${running})`,
+    )
       .bind(pid)
       .all(),
     env.DB.prepare(
@@ -568,10 +583,14 @@ async function rentRoll(c, access) {
     )
       .bind(pid, now)
       .all(),
-    env.DB.prepare("SELECT COALESCE(SUM(amount_cents), 0) AS cents FROM payments WHERE property_id = ?1 AND paid_at >= ?2")
+    env.DB.prepare(
+      "SELECT COALESCE(SUM(amount_cents), 0) AS cents FROM payments WHERE property_id = ?1 AND paid_at >= ?2",
+    )
       .bind(pid, monthStart(now))
       .first(),
-    env.DB.prepare("SELECT COUNT(*) AS n FROM tickets WHERE property_id = ?1 AND status != 'resolved'").bind(pid).first(),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM tickets WHERE property_id = ?1 AND status != 'resolved'")
+      .bind(pid)
+      .first(),
   ]);
 
   const byLease = (rows) => {
@@ -594,8 +613,20 @@ async function rentRoll(c, access) {
   const rows = units.results.map((u) => {
     if (!u.lease_id) return { unit_id: u.id, number: u.number, lease: null };
     occupied += 1;
-    const lease = { id: u.lease_id, due_day: u.due_day, starts_at: u.starts_at, ends_at: u.ends_at, ended_at: u.ended_at };
-    const ledger = ledgerOf(lease, stepsOf.get(u.lease_id) || [], chargesOf.get(u.lease_id) || [], paymentsOf.get(u.lease_id) || [], now);
+    const lease = {
+      id: u.lease_id,
+      due_day: u.due_day,
+      starts_at: u.starts_at,
+      ends_at: u.ends_at,
+      ended_at: u.ended_at,
+    };
+    const ledger = ledgerOf(
+      lease,
+      stepsOf.get(u.lease_id) || [],
+      chargesOf.get(u.lease_id) || [],
+      paymentsOf.get(u.lease_id) || [],
+      now,
+    );
     outstanding += ledger.balance_cents;
     if (ledger.overdue_cents > 0) overdueLeases += 1;
     return {
@@ -653,7 +684,9 @@ async function addUnits(c, access) {
   if (numbers.length > LIMITS.unitsPerCall) {
     return fail(400, "too_many", `add up to ${LIMITS.unitsPerCall} units at a time`);
   }
-  const count = await env.DB.prepare("SELECT COUNT(*) AS n FROM units WHERE property_id = ?1").bind(access.property.id).first();
+  const count = await env.DB.prepare("SELECT COUNT(*) AS n FROM units WHERE property_id = ?1")
+    .bind(access.property.id)
+    .first();
   if (count.n + numbers.length > LIMITS.units) {
     return fail(403, "unit_limit", `a property holds up to ${LIMITS.units} units`);
   }
@@ -732,7 +765,9 @@ async function deleteUnit(c, access) {
   const { unit } = access;
   const ended = "SELECT id FROM leases WHERE unit_id = ?1 AND ended_at IS NOT NULL";
   const results = await env.DB.batch([
-    env.DB.prepare(`DELETE FROM ticket_events WHERE ticket_id IN (SELECT id FROM tickets WHERE lease_id IN (${ended}))`).bind(unit.id),
+    env.DB.prepare(
+      `DELETE FROM ticket_events WHERE ticket_id IN (SELECT id FROM tickets WHERE lease_id IN (${ended}))`,
+    ).bind(unit.id),
     ...["tickets", "payments", "charges", "invites", "lease_tenants", "rent_steps"].map((t) =>
       env.DB.prepare(`DELETE FROM ${t} WHERE lease_id IN (${ended})`).bind(unit.id),
     ),
@@ -910,7 +945,8 @@ async function updateLease(c, access) {
     let endsAt = null;
     if (body.ends_on) {
       endsAt = dateOn(body.ends_on);
-      if (endsAt === null || endsAt < lease.starts_at) return fail(400, "bad_end", "the lease must end after it starts");
+      if (endsAt === null || endsAt < lease.starts_at)
+        return fail(400, "bad_end", "the lease must end after it starts");
     }
     statements.push(env.DB.prepare("UPDATE leases SET ends_at = ?1 WHERE id = ?2").bind(endsAt, lease.id));
   }
@@ -918,7 +954,11 @@ async function updateLease(c, access) {
   if (!statements.length) return fail(400, "nothing_to_change", "nothing to change");
   await env.DB.batch(statements);
   await notify(env, lease.property_id, { t: "lease.changed", lease_id: lease.id }, [lease.id]);
-  log("lease.update", { lease: shortId(lease.id), rent: body.rent_cents !== undefined, term: body.ends_on !== undefined });
+  log("lease.update", {
+    lease: shortId(lease.id),
+    rent: body.rent_cents !== undefined,
+    term: body.ends_on !== undefined,
+  });
   return leaseDetail(c, await leaseAccess(env, c.user, lease.id));
 }
 
@@ -949,7 +989,11 @@ async function endLease(c, access) {
     env.DB.prepare("DELETE FROM invites WHERE lease_id = ?1 AND claimed_by IS NULL").bind(lease.id),
   ]);
   if (!changed(ended)) return fail(409, "lease_ended", "this lease has already ended");
-  const kicked = await kickUsers(env, lease.property_id, tenants.map((t) => t.user_id));
+  const kicked = await kickUsers(
+    env,
+    lease.property_id,
+    tenants.map((t) => t.user_id),
+  );
   log("lease.end", { lease: shortId(lease.id), tenants: tenants.length, kicked });
   return json({ ok: true, kicked });
 }
@@ -1059,7 +1103,8 @@ async function isTenantOn(env, leaseId, user) {
 async function previewInvite(c, token) {
   const { env, user } = c;
   const invite = await findInvite(env, token);
-  if (!invite || invite.ended_at !== null) return fail(404, "invite_invalid", "this invite link is invalid or was revoked");
+  if (!invite || invite.ended_at !== null)
+    return fail(404, "invite_invalid", "this invite link is invalid or was revoked");
   const already = await isTenantOn(env, invite.lease_id, user);
   const now = Date.now();
   if (!already && invite.claimed_by && invite.claimed_by !== user) {
@@ -1098,7 +1143,8 @@ async function previewInvite(c, token) {
 async function claimInvite(c, token) {
   const { env, user } = c;
   const invite = await findInvite(env, token);
-  if (!invite || invite.ended_at !== null) return fail(404, "invite_invalid", "this invite link is invalid or was revoked");
+  if (!invite || invite.ended_at !== null)
+    return fail(404, "invite_invalid", "this invite link is invalid or was revoked");
   const joined = { lease_id: invite.lease_id, property_id: invite.property_id };
   // Neither of these uses the link up: a landlord trying their own link, or
   // a tenant opening it twice, leaves it for the person it was meant for.
@@ -1125,7 +1171,10 @@ async function claimInvite(c, token) {
   if (!changed(claim)) {
     const fresh = await findInvite(env, token);
     if (fresh && fresh.claimed_by === user && (await isTenantOn(env, invite.lease_id, user))) return json(joined);
-    log("invite.claim.rejected", { invite: shortId(invite.id), reason: fresh && fresh.claimed_by ? "used" : "expired" });
+    log("invite.claim.rejected", {
+      invite: shortId(invite.id),
+      reason: fresh && fresh.claimed_by ? "used" : "expired",
+    });
     if (fresh && fresh.claimed_by) return fail(409, "invite_claimed", "this invite link was already used");
     return fail(410, "invite_expired", "this invite link has expired; ask for a new one");
   }
@@ -1250,7 +1299,10 @@ function ledgerOf(lease, steps, charges, payments, now) {
   for (const charge of charges) {
     const ref = "charge:" + charge.id;
     const label = charge.label || CHARGE_KINDS[charge.kind] || "Charge";
-    items.push({ ...itemOf(ref, charge.kind, label, charge.amount_cents, charge.due_at, paid.get(ref), now), charge_id: charge.id });
+    items.push({
+      ...itemOf(ref, charge.kind, label, charge.amount_cents, charge.due_at, paid.get(ref), now),
+      charge_id: charge.id,
+    });
   }
   items.sort((a, b) => a.due_at - b.due_at || a.ref.localeCompare(b.ref));
 
@@ -1330,7 +1382,12 @@ async function addCharge(c, access) {
   )
     .bind(id, lease.id, lease.property_id, kind, label, amount, dueAt, Date.now())
     .run();
-  await notify(env, lease.property_id, { t: "ledger.changed", lease_id: lease.id, kind: "charge" }, [lease.id]);
+  await notify(
+    env,
+    lease.property_id,
+    { t: "ledger.changed", lease_id: lease.id, unit: lease.unit_number, kind: "charge", cents: amount },
+    [lease.id],
+  );
   log("charge.create", { lease: shortId(lease.id), charge: shortId(id), kind });
   return json({ id, kind, label, amount_cents: amount, due_at: dueAt }, 201);
 }
@@ -1350,11 +1407,18 @@ async function voidCharge(c, access, chargeId) {
     .bind(id, lease.id)
     .run();
   if (!changed(result)) {
-    const exists = await env.DB.prepare("SELECT 1 AS x FROM charges WHERE id = ?1 AND lease_id = ?2").bind(id, lease.id).first();
+    const exists = await env.DB.prepare("SELECT 1 AS x FROM charges WHERE id = ?1 AND lease_id = ?2")
+      .bind(id, lease.id)
+      .first();
     if (exists) return fail(409, "charge_paid", "this charge is paid; it can't be voided");
     return notFound("charge not found");
   }
-  await notify(env, lease.property_id, { t: "ledger.changed", lease_id: lease.id, kind: "void" }, [lease.id]);
+  await notify(
+    env,
+    lease.property_id,
+    { t: "ledger.changed", lease_id: lease.id, unit: lease.unit_number, kind: "void" },
+    [lease.id],
+  );
   log("charge.void", { lease: shortId(lease.id), charge: shortId(id) });
   return json({ ok: true });
 }
@@ -1447,10 +1511,22 @@ async function pay(c, access) {
   await notify(
     env,
     lease.property_id,
-    { t: "ledger.changed", lease_id: lease.id, kind: method === "card" ? "paid" : "recorded", by: c.me.name, cents: paidCents },
+    {
+      t: "ledger.changed",
+      lease_id: lease.id,
+      unit: lease.unit_number,
+      kind: method === "card" ? "paid" : "recorded",
+      by: c.me.name,
+      by_id: user,
+      cents: paidCents,
+    },
     [lease.id],
   );
-  log(method === "card" ? "pay.card" : "pay.recorded", { lease: shortId(lease.id), items: paid.length, skipped: skipped.length });
+  log(method === "card" ? "pay.card" : "pay.recorded", {
+    lease: shortId(lease.id),
+    items: paid.length,
+    skipped: skipped.length,
+  });
   return json({ confirmation, paid, skipped, total_cents: paidCents }, 201);
 }
 
@@ -1503,9 +1579,20 @@ async function postAnnouncement(c, access) {
     .bind(access.property.id)
     .first();
   if (count.n >= LIMITS.announcements) {
-    return fail(403, "announcement_limit", `a property keeps up to ${LIMITS.announcements} announcements; delete an old one`);
+    return fail(
+      403,
+      "announcement_limit",
+      `a property keeps up to ${LIMITS.announcements} announcements; delete an old one`,
+    );
   }
-  const post = { id: crypto.randomUUID(), title, body: text, pinned: !!body.pinned, posted_at: Date.now(), author_name: c.me.name };
+  const post = {
+    id: crypto.randomUUID(),
+    title,
+    body: text,
+    pinned: !!body.pinned,
+    posted_at: Date.now(),
+    author_name: c.me.name,
+  };
   await env.DB.prepare(
     "INSERT INTO announcements (id, property_id, author_id, title, body, pinned, posted_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
   )
@@ -1661,7 +1748,15 @@ async function ticketDetail(c, access) {
   for (const row of results) events.set(row.id, row);
   for (const row of pending) {
     if (!events.has(row.id)) {
-      events.set(row.id, { id: row.id, kind: "comment", author_id: row.author_id, body: row.body, status: "", at: row.at, author_name: row.author_name });
+      events.set(row.id, {
+        id: row.id,
+        kind: "comment",
+        author_id: row.author_id,
+        body: row.body,
+        status: "",
+        at: row.at,
+        author_name: row.author_name,
+      });
     }
   }
   const thread = [...events.values()]
@@ -1709,7 +1804,14 @@ async function updateTicket(c, access) {
   await notify(
     env,
     ticket.property_id,
-    { t: "ticket.updated", id: ticket.id, lease_id: ticket.lease_id, status, title: ticket.title },
+    {
+      t: "ticket.updated",
+      id: ticket.id,
+      lease_id: ticket.lease_id,
+      status,
+      title: ticket.title,
+      unit: ticket.unit_number,
+    },
     [ticket.lease_id],
   );
   log("ticket.status", { ticket: shortId(ticket.id), from: ticket.status, to: status });
@@ -1723,16 +1825,22 @@ async function withdrawTicket(c, access) {
   const { env, user } = c;
   const { ticket } = access;
   const [removed] = await env.DB.batch([
-    env.DB.prepare("DELETE FROM tickets WHERE id = ?1 AND created_by = ?2 AND status = 'submitted'").bind(ticket.id, user),
+    env.DB.prepare("DELETE FROM tickets WHERE id = ?1 AND created_by = ?2 AND status = 'submitted'").bind(
+      ticket.id,
+      user,
+    ),
     env.DB.prepare(
       "DELETE FROM ticket_events WHERE ticket_id = ?1 AND NOT EXISTS (SELECT 1 FROM tickets WHERE id = ?1)",
     ).bind(ticket.id),
   ]);
   if (!changed(removed)) {
-    if (ticket.created_by !== user) return fail(403, "not_yours", "only the person who filed a request can withdraw it");
+    if (ticket.created_by !== user)
+      return fail(403, "not_yours", "only the person who filed a request can withdraw it");
     return fail(409, "ticket_locked", "your landlord has already picked this up");
   }
-  await notify(env, ticket.property_id, { t: "ticket.withdrawn", id: ticket.id, lease_id: ticket.lease_id }, [ticket.lease_id]);
+  await notify(env, ticket.property_id, { t: "ticket.withdrawn", id: ticket.id, lease_id: ticket.lease_id }, [
+    ticket.lease_id,
+  ]);
   log("ticket.withdraw", { ticket: shortId(ticket.id) });
   return json({ ok: true });
 }
@@ -2050,7 +2158,10 @@ export class Property {
 
   pending(ticketId) {
     const rows = this.ctx.storage.sql
-      .exec("SELECT id, author_id, author_name, role, body, at FROM pending WHERE ticket_id = ? ORDER BY at", String(ticketId || ""))
+      .exec(
+        "SELECT id, author_id, author_name, role, body, at FROM pending WHERE ticket_id = ? ORDER BY at",
+        String(ticketId || ""),
+      )
       .toArray();
     return json(rows);
   }
@@ -2145,7 +2256,13 @@ export class Property {
     for (const r of rows) sql.exec("DELETE FROM pending WHERE id = ?", r.id);
     const left = sql.exec("SELECT COUNT(*) AS n FROM pending").one().n;
     if (left) await this.ctx.storage.setAlarm(Date.now() + 250);
-    log("flush", { property: shortId(this.meta.property), rows: rows.length, tickets: tickets.length, left, ms: Date.now() - started });
+    log("flush", {
+      property: shortId(this.meta.property),
+      rows: rows.length,
+      tickets: tickets.length,
+      left,
+      ms: Date.now() - started,
+    });
   }
 
   /* storage */
