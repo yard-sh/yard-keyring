@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   id      TEXT PRIMARY KEY,
   name    TEXT NOT NULL,
   email   TEXT NOT NULL DEFAULT '',
-  seen_at INTEGER NOT NULL DEFAULT 0
+  seen_at INTEGER NOT NULL
 );
 
 -- The landlord is landlord_id and nothing else: landlords are never listed in
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS properties (
   phone       TEXT NOT NULL DEFAULT '',
   emergency   TEXT NOT NULL DEFAULT '',
   hours       TEXT NOT NULL DEFAULT '',
-  created_at  INTEGER NOT NULL DEFAULT 0
+  created_at  INTEGER NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_properties_landlord ON properties (landlord_id, created_at);
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS units (
   id          TEXT PRIMARY KEY,
   property_id TEXT NOT NULL,
   number      TEXT NOT NULL COLLATE NOCASE,
-  created_at  INTEGER NOT NULL DEFAULT 0
+  created_at  INTEGER NOT NULL
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_units_number ON units (property_id, number);
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS leases (
   starts_at   INTEGER NOT NULL,
   ends_at     INTEGER,
   ended_at    INTEGER,
-  created_at  INTEGER NOT NULL DEFAULT 0
+  created_at  INTEGER NOT NULL
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_leases_running ON leases (unit_id) WHERE ended_at IS NULL;
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS lease_tenants (
   lease_id    TEXT NOT NULL,
   user_id     TEXT NOT NULL,
   property_id TEXT NOT NULL,
-  joined_at   INTEGER NOT NULL DEFAULT 0,
+  joined_at   INTEGER NOT NULL,
   PRIMARY KEY (lease_id, user_id)
 );
 
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS invites (
   lease_id    TEXT NOT NULL,
   property_id TEXT NOT NULL,
   email       TEXT NOT NULL DEFAULT '',
-  created_at  INTEGER NOT NULL DEFAULT 0,
+  created_at  INTEGER NOT NULL,
   expires_at  INTEGER NOT NULL,
   claimed_by  TEXT,
   claimed_at  INTEGER
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS charges (
   label        TEXT NOT NULL DEFAULT '',
   amount_cents INTEGER NOT NULL,
   due_at       INTEGER NOT NULL,
-  created_at   INTEGER NOT NULL DEFAULT 0
+  created_at   INTEGER NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_charges_lease ON charges (lease_id, due_at);

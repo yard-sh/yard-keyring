@@ -263,16 +263,13 @@ async function handleAPI(request, env, url) {
 /* -------------------------------------------------------------- identity */
 
 // Landlord powers are the project owner (a seller never buys their own
-// project), or a live subscription or trial of the Landlord tier. The Yard
-// docs say X-Yard-Tier is absent on single-price projects, and Keyring has a
-// single tier, so a missing tier counts; a tier that is present must be ours,
-// so a tier added later never unlocks landlord powers by accident.
+// project), or a live subscription or trial of the Landlord tier. Checking
+// the tier name means a tier added later never unlocks them by accident.
 function landlordPlan(headers) {
   const entitlement = headers.get("X-Yard-Entitlement") || "none";
   if (entitlement === "owner") return true;
   if (entitlement !== "active" && entitlement !== "trial") return false;
-  const tier = headers.get("X-Yard-Tier");
-  return !tier || tier === LANDLORD_TIER;
+  return headers.get("X-Yard-Tier") === LANDLORD_TIER;
 }
 
 // There is no display-name header, so the first visit derives one from the

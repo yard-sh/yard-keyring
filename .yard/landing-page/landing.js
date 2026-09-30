@@ -236,21 +236,16 @@
         return t.name === "Landlord";
       }) ||
       tiers.find(function (t) {
-        return t.pricing_model === "subscription" && t.price_cents > 0;
+        return t.is_default;
       }) ||
       tiers[0];
     var card = document.getElementById("landlordPlan");
     var buy = document.getElementById("buyBtn");
+    var subscription = tier.pricing_model === "subscription";
     card.querySelector("[data-name]").textContent = tier.name;
-    // The Landlord plan is never free, so a zero price is a placeholder, not
-    // a price: `yard dev --offline` synthesizes tiers without their price or
-    // pricing model. The HTML's own copy stays up in that case.
-    if (tier.price_cents > 0) {
-      var subscription = tier.pricing_model === "subscription";
-      card.querySelector("[data-amount]").textContent = money(tier.price_cents);
-      card.querySelector("[data-per]").textContent = subscription ? "/ month" : "once";
-      buy.textContent = "Subscribe for " + money(tier.price_cents) + (subscription ? " / month" : "");
-    }
+    card.querySelector("[data-amount]").textContent = money(tier.price_cents);
+    card.querySelector("[data-per]").textContent = subscription ? "/ month" : "once";
+    buy.textContent = "Subscribe for " + money(tier.price_cents) + (subscription ? " / month" : "");
     if (tier.description) card.querySelector("[data-blurb]").textContent = tier.description;
     if (tier.features && tier.features.length) {
       card.querySelector("[data-features]").replaceChildren.apply(
@@ -266,15 +261,13 @@
     // Trials are per tier: the button only appears when this tier has one,
     // and it names this tier so the redirect starts the right trial.
     var trial = document.getElementById("trialBtn");
-    if (tier.free_trial_enabled && !(tier.free_trial_days <= 0)) {
+    if (tier.free_trial && tier.free_trial.enabled) {
       if (tier.id) trial.dataset.tierId = tier.id;
-      if (tier.free_trial_days) {
-        trial.textContent =
-          "Start a " +
-          tier.free_trial_days +
-          "-day free trial" +
-          (tier.trial_requires_card === false ? ", no card" : "");
-      }
+      trial.textContent =
+        "Start a " +
+        tier.free_trial.days +
+        "-day free trial" +
+        (tier.free_trial.requires_card ? "" : ", no card");
       trial.hidden = false;
     }
 

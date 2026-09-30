@@ -93,11 +93,9 @@ theirs and the Landlord plan to be live: the project owner, or an `active` or
 `trial` entitlement on the Landlord tier. Reads never check the plan. So when
 a trial ends unconverted (it needs no card, so many will), the landlord keeps
 everything, read-only, and their tenants notice nothing. The tier name is the
-`LANDLORD_TIER` constant; rename it together with `settings.json`. The Yard
-docs say `X-Yard-Tier` is absent on single-price projects, and Keyring has one
-tier, so an active entitlement with no tier counts too. The app re-reads
-`api/me` when the window regains focus, because the edge caches entitlement
-for up to a minute and pushes nothing.
+`LANDLORD_TIER` constant; rename it together with `settings.json`. The app
+re-reads `api/me` when the window regains focus, because the edge caches
+entitlement for up to a minute and pushes nothing.
 
 **Rent is computed, never stored.** A lease has a due day (1 to 28), a start
 date, an optional last day, and its rent in `rent_steps`. Every time a ledger
@@ -229,11 +227,6 @@ Every save restarts the local runtime, which drops every open socket. The
 client reconnects on its own, the same way it does when a hosted session
 reaches its 24-hour limit. `yard dev --reset-db` starts from an empty database
 and `--reset-rooms` deletes every stored room.
-
-With `--offline`, `yard dev` makes up the project's public data from
-`settings.json`, and today it leaves out the tier's price, pricing model,
-features and trial length. The landing page keeps its own copy of the price
-when a paid tier comes through as $0, so the pricing card still reads right.
 
 ## Testing
 
