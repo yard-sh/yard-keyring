@@ -1,0 +1,48 @@
+{
+  "version": 7,
+  "project_slug": "keyring",
+  "ignore_files": [],
+  "services": [
+    {
+      "dir": "app",
+      "name": "app",
+      "url": "/app",
+      "access": "authenticated",
+      "database_access": true,
+      "objects": [
+        {
+          "class": "Property",
+          "binding": "PROPERTIES"
+        }
+      ]
+    }
+  ],
+  "landing_page": {
+    "type": "custom",
+    "dir": ".yard/landing-page"
+  },
+  "pricing": {
+    "tiers": [
+      {
+        "name": "Landlord",
+        "price_cents": 5000,
+        "is_default": true,
+        "pricing_model": "subscription",
+        "description": "Run your buildings from one ring. Tenants never pay.",
+        "features": [
+          "Up to 25 properties, 300 units each",
+          "Rent roll with live collections",
+          "Invite links for up to 6 tenants per lease",
+          "Maintenance requests with live threads",
+          "Announcements to every tenant",
+          "Light and dark"
+        ],
+        "free_trial": {
+          "enabled": true,
+          "days": 14,
+          "requires_card": false
+        }
+      }
+    ]
+  }
+}
