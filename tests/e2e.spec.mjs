@@ -188,7 +188,8 @@ test("a declined test card is refused inside the checkout", async () => {
 test("a tenant's payment shows up on the landlord's rent roll live", async () => {
   const landlord = people.landlord;
   await landlord.goto(`app/#/l/p/${story.propertyId}`);
-  await expect(landlord.locator('[data-unit="1A"]')).toContainText("Overdue");
+  // The first rent is due on the 1st: "Due" on the 1st itself, "Overdue" after.
+  await expect(landlord.locator('[data-unit="1A"]')).toContainText(/Due|Overdue/);
   const tenant = people.tenant;
   await inDialog(tenant).getByLabel("Card number").fill("4242 4242 4242 4242");
   await inDialog(tenant).getByRole("button", { name: /^Pay/ }).click();
