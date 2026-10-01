@@ -69,7 +69,7 @@ export async function view(ctx, portal, id) {
           h("input", { type: "checkbox", name: "pinned" }),
           h("span.check__label", {}, "Pin to the top"),
         ),
-        h("button.btn.btn--brass", { type: "submit" }, icon("megaphone"), "Post to all tenants"),
+        h("button.btn.btn--primary", { type: "submit" }, icon("megaphone"), "Post to all tenants"),
       ),
     );
     form.addEventListener(
@@ -123,7 +123,7 @@ export async function view(ctx, portal, id) {
             h(
               "p.post__meta",
               {},
-              a.pinned ? h("span.chip.chip--brass", {}, icon("pin"), "Pinned") : null,
+              a.pinned ? h("span.chip.chip--accent", {}, icon("pin"), "Pinned") : null,
               h("span", {}, `${a.author_name || "Your landlord"} · ${ago(a.posted_at)}`),
             ),
             h("h2.post__title", {}, a.title),

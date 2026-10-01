@@ -50,7 +50,7 @@ export async function list(ctx, portal, id) {
     "div.section__head",
     {},
     chips,
-    portal === "t" ? h("a.btn.btn--brass", { href: `${frame.base}/new` }, icon("plus"), "New request") : null,
+    portal === "t" ? h("a.btn.btn--primary", { href: `${frame.base}/new` }, icon("plus"), "New request") : null,
   );
   frame.body.replaceChildren(head, listBox);
 
@@ -200,7 +200,7 @@ export async function create(ctx, leaseId) {
       "div.form__actions",
       {},
       h("a.btn.btn--ghost", { href: frame.base }, "Cancel"),
-      h("button.btn.btn--brass", { type: "submit" }, icon("send"), "Send to landlord"),
+      h("button.btn.btn--primary", { type: "submit" }, icon("send"), "Send to landlord"),
     ),
   );
   form.addEventListener(
@@ -250,7 +250,7 @@ export async function detail(ctx, portal, id, ticketId) {
     placeholder: "Write a reply…",
     "aria-label": "Reply",
   });
-  const send = h("button.btn.btn--brass", { type: "submit" }, icon("send"), "Send");
+  const send = h("button.btn.btn--primary", { type: "submit" }, icon("send"), "Send");
   const composer = h("form.composer", { novalidate: true }, box, send);
   frame.body.replaceChildren(
     h("a.crumb", { href: frame.base }, icon("back"), "All requests"),
@@ -376,7 +376,7 @@ export async function detail(ctx, portal, id, ticketId) {
           "p.bubble__who",
           {},
           mine ? "You" : e.author_name,
-          e.role === "landlord" ? h("span.chip.chip--brass", {}, "Landlord") : null,
+          e.role === "landlord" ? h("span.chip.chip--accent", {}, "Landlord") : null,
           h("time", {}, ago(e.at)),
         ),
         prose(e.body),

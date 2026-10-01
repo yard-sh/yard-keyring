@@ -3,7 +3,7 @@
 
 export const $ = (id) => document.getElementById(id);
 
-// h("button.btn.btn--brass", { type: "button", onclick }, "Pay") builds an
+// h("button.btn.btn--primary", { type: "button", onclick }, "Pay") builds an
 // element. Strings among the children become text nodes, never HTML.
 export function h(tag, props, ...kids) {
   const [name, ...classes] = tag.split(".");
@@ -150,7 +150,7 @@ export function signature(value) {
 
 // Six calm colours for people's initials; the same person always gets the
 // same one.
-const PEOPLE = ["#2F7A5B", "#B7791F", "#3D6A99", "#A2513B", "#6C5A9C", "#557A2E"];
+const PEOPLE = ["#1F3A93", "#0B6FB8", "#0F7A4D", "#B4462F", "#5B3FA0", "#8A5A00"];
 
 export function colorOf(id) {
   let hash = 0;
@@ -251,7 +251,7 @@ export function modal({
   return new Promise((resolve) => {
     let settled = false;
     const error = h("p.modal__error", { role: "alert", hidden: true });
-    const ok = h("button.btn." + (danger ? "btn--danger" : "btn--brass"), { type: "submit" }, confirm);
+    const ok = h("button.btn." + (danger ? "btn--danger" : "btn--primary"), { type: "submit" }, confirm);
     const close = h("button.iconbtn.modal__x", { type: "button", "aria-label": "Close" }, icon("x"));
     const form = h(
       "form.modal__form",

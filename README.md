@@ -53,7 +53,7 @@ Once it's live:
       pay.js              the simulated checkout and receipts
       live.js             the socket client: reconnects, close codes, typing
       api.js · ui.js      fetch wrapper; DOM helpers, dialogs, money and dates
-      styles.css          evergreen & brass tokens, light and dark
+      styles.css          navy & sky tokens, light and dark
     tests/                curl and Playwright checks against yard dev; not deployed
 
 The service entry declares its mount, access mode, database, and room class:

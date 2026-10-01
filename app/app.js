@@ -468,7 +468,7 @@ async function welcome(ctx) {
             {},
             "Run your buildings from one ring: rent roll, invites, requests and announcements. $50 a month, and your tenants never pay.",
           ),
-          h("a.btn.btn--brass", { href: "../#pricing" }, "Start a 14-day free trial"),
+          h("a.btn.btn--primary", { href: "../#pricing" }, "Start a 14-day free trial"),
         ),
       ),
     ),

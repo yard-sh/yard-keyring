@@ -48,13 +48,6 @@ test("the landing page shows who is signed in", async () => {
   await expect(page.locator("#auth")).toContainText("Your properties");
 });
 
-test("a key tag on the keyring flips when pressed", async () => {
-  const page = people.outsider;
-  const tag = page.locator(".ktag").first();
-  await tag.click();
-  await expect(tag).toHaveAttribute("aria-pressed", "true");
-});
-
 test("a landlord creates a property with units", async () => {
   const page = people.landlord;
   await page.goto("app/#/l");

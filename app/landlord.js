@@ -99,7 +99,7 @@ export async function portfolio(ctx) {
       {},
       h("div", {}, h("p.eyebrow", {}, "Landlord"), h("h1.page__title", {}, "Your properties")),
       me.landlord_plan
-        ? h("button.btn.btn--brass", { type: "button", onclick: ctx.guard(newProperty) }, icon("plus"), "New property")
+        ? h("button.btn.btn--primary", { type: "button", onclick: ctx.guard(newProperty) }, icon("plus"), "New property")
         : null,
     );
 
@@ -120,7 +120,7 @@ export async function portfolio(ctx) {
             {},
             "A building, a duplex, a single house: give it a name, add its units, and invite the people who live there.",
           ),
-          h("button.btn.btn--brass", { type: "button", onclick: ctx.guard(newProperty) }, icon("plus"), "New property"),
+          h("button.btn.btn--primary", { type: "button", onclick: ctx.guard(newProperty) }, icon("plus"), "New property"),
         ),
       );
       return;
@@ -216,7 +216,7 @@ function planPitch() {
         {},
         "$50 a month for up to 25 properties with 300 units each. Try it free for 14 days, no card needed. Your tenants never pay.",
       ),
-      h("a.btn.btn--brass", { href: "../#pricing" }, "See the Landlord plan"),
+      h("a.btn.btn--primary", { href: "../#pricing" }, "See the Landlord plan"),
     ),
   );
 }
@@ -282,7 +282,7 @@ export async function rentRoll(ctx, propertyId) {
           {},
           h("p", {}, "No units yet. Add them all at once: ranges like 101-110 or 2A-2F work."),
           roll.can_write
-            ? h("button.btn.btn--brass", { type: "button", onclick: ctx.guard(addUnits) }, icon("plus"), "Add units")
+            ? h("button.btn.btn--primary", { type: "button", onclick: ctx.guard(addUnits) }, icon("plus"), "Add units")
             : null,
         ),
       );
@@ -565,7 +565,7 @@ export async function unit(ctx, propertyId, unitId) {
       h(
         "div.form__actions",
         {},
-        h("button.btn.btn--brass", { type: "submit" }, icon("key"), "Start lease and make invites"),
+        h("button.btn.btn--primary", { type: "submit" }, icon("key"), "Start lease and make invites"),
       ),
     );
     form.addEventListener(
@@ -1199,7 +1199,7 @@ export async function settings(ctx, propertyId) {
         field("Office hours", input("hours", { value: property.hours, maxlength: 80, ...ro })),
       ),
     ),
-    canWrite ? h("div.form__actions", {}, h("button.btn.btn--brass", { type: "submit" }, "Save changes")) : null,
+    canWrite ? h("div.form__actions", {}, h("button.btn.btn--primary", { type: "submit" }, "Save changes")) : null,
   );
   form.addEventListener(
     "submit",

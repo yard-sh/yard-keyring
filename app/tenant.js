@@ -123,7 +123,7 @@ export async function home(ctx, leaseId) {
             "div.bill__actions",
             {},
             h(
-              "button.btn.btn--brass.btn--lg",
+              "button.btn.btn--primary.btn--lg",
               { type: "button", onclick: ctx.guard(() => pay(open)) },
               icon("card"),
               "Pay " + money(lease.balance_cents),
@@ -193,7 +193,7 @@ export async function home(ctx, leaseId) {
                 h(
                   "p.post__meta",
                   {},
-                  a.pinned ? h("span.chip.chip--brass", {}, icon("pin"), "Pinned") : null,
+                  a.pinned ? h("span.chip.chip--accent", {}, icon("pin"), "Pinned") : null,
                   h("span", {}, ago(a.posted_at)),
                 ),
                 h("h3.post__title", {}, a.title),
@@ -317,7 +317,7 @@ export async function payments(ctx, leaseId) {
     let due;
     if (open.length) {
       const total = h("strong.mono", {}, money(lease.balance_cents));
-      const button = h("button.btn.btn--brass", { type: "submit" }, icon("card"), "Pay selected");
+      const button = h("button.btn.btn--primary", { type: "submit" }, icon("card"), "Pay selected");
       due = h(
         "form.card.due",
         { "data-card": "due", novalidate: true },

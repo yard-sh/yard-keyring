@@ -122,7 +122,7 @@
 
   function renderSignedOut() {
     var tenant = el("a", { class: "btn btn--ghost btn--sm", text: "Tenant login" });
-    var landlord = el("a", { class: "btn btn--brass btn--sm", text: "Landlord login" });
+    var landlord = el("a", { class: "btn btn--primary btn--sm", text: "Landlord login" });
     portalLink(tenant, "t");
     portalLink(landlord, "l");
     slot.replaceChildren(tenant, landlord);
@@ -181,7 +181,7 @@
       }
     });
 
-    var open = el("a", { class: "btn btn--brass btn--sm" });
+    var open = el("a", { class: "btn btn--primary btn--sm" });
     var portal = who.landlord ? "l" : "t";
     open.textContent = who.landlord ? "Your properties" : who.tenant ? "Your home" : "Open Keyring";
     portalLink(open, portal);
@@ -315,141 +315,4 @@
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
-
-  /* ------------------------------------------------------------ keyring */
-
-  // Five tags hang from points along the bottom of the ring. Each one is a
-  // damped spring around its resting angle: moving the pointer across the
-  // ring pushes the tags it passes, a push nudges the neighbours a little
-  // (that's the jingle), and a click flips a tag to its pretend status. The
-  // loop runs only while something moves, the ring is on screen and the tab
-  // is visible; with reduced motion the tags hang still and flip in place.
-  var ring = document.getElementById("ring");
-  var tags = [].slice.call(ring.querySelectorAll(".ktag"));
-  var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  var STIFFNESS = 60; // 1/s², pull back to rest
-  var DAMPING = 2.6; // 1/s, how fast a swing dies
-  var COUPLING = 0.012; // share of a tag's swing its neighbours feel
-  var MAX_SPIN = 420; // deg/s
-  var ARC = [150, 120, 90, 60, 30]; // where each tag hangs on the ring, in degrees
-
-  var sim = tags.map(function (tag, i) {
-    var rest = (ARC[i] - 90) * 0.42;
-    return { angle: rest, spin: 0, rest: rest, x: 0, y: 0 };
-  });
-
-  tags.forEach(function (tag, i) {
-    var front = tag.querySelector(".ktag__face--front");
-    var back = tag.querySelector(".ktag__face--back");
-    front.dataset.label = "Unit";
-    front.appendChild(el("span", { class: "ktag__big", text: tag.dataset.front }));
-    back.dataset.label = "Unit " + tag.dataset.front;
-    back.appendChild(el("span", { class: "ktag__big", text: tag.dataset.back }));
-    back.appendChild(el("span", { class: "ktag__note", text: tag.dataset.note }));
-    tag.setAttribute("aria-label", "Unit " + tag.dataset.front + ": " + tag.dataset.back + ", " + tag.dataset.note);
-    tag.style.setProperty("--a", sim[i].rest.toFixed(2) + "deg");
-    tag.addEventListener("click", function () {
-      var flipped = tag.getAttribute("aria-pressed") === "true";
-      tag.setAttribute("aria-pressed", String(!flipped));
-      push(i, flipped ? -140 : 140);
-    });
-  });
-
-  // Put each tag's hole on the ring.
-  function place() {
-    var box = ring.getBoundingClientRect();
-    var loop = ring.querySelector(".ring__loop").getBoundingClientRect();
-    var r = (loop.width * 92) / 220;
-    var cx = loop.left - box.left + loop.width / 2;
-    var cy = loop.top - box.top + loop.height / 2;
-    tags.forEach(function (tag, i) {
-      var phi = (ARC[i] * Math.PI) / 180;
-      sim[i].x = cx + r * Math.cos(phi);
-      sim[i].y = cy + r * Math.sin(phi);
-      tag.style.left = sim[i].x + "px";
-      tag.style.top = sim[i].y - 9 + "px";
-    });
-  }
-  place();
-  window.addEventListener("resize", place);
-
-  var visible = true;
-  var frame = 0;
-  var last = 0;
-
-  function push(i, spin) {
-    if (reduced) return;
-    var s = sim[i];
-    s.spin = Math.max(-MAX_SPIN, Math.min(MAX_SPIN, s.spin + spin));
-    start();
-  }
-
-  function start() {
-    if (frame || reduced || !visible || document.hidden) return;
-    last = performance.now();
-    frame = requestAnimationFrame(tick);
-  }
-
-  function tick(now) {
-    var dt = Math.min(0.032, (now - last) / 1000);
-    last = now;
-    var moving = false;
-    sim.forEach(function (s, i) {
-      var pull = -STIFFNESS * (s.angle - s.rest) - DAMPING * s.spin;
-      s.spin += pull * dt;
-      if (i > 0) sim[i - 1].spin += s.spin * COUPLING;
-      if (i < sim.length - 1) sim[i + 1].spin += s.spin * COUPLING;
-      s.angle += s.spin * dt;
-      if (Math.abs(s.spin) > 0.5 || Math.abs(s.angle - s.rest) > 0.1) moving = true;
-      tags[i].style.setProperty("--a", s.angle.toFixed(2) + "deg");
-    });
-    frame = moving && visible && !document.hidden ? requestAnimationFrame(tick) : 0;
-  }
-
-  // A pointer sweeping across the tags pushes the ones it passes, in the
-  // direction it moves. Rotating clockwise moves a tag's bottom left, so a
-  // rightward sweep is a negative spin.
-  var lastPointer = null;
-  ring.addEventListener("pointermove", function (e) {
-    var box = ring.getBoundingClientRect();
-    var x = e.clientX - box.left;
-    var y = e.clientY - box.top;
-    var now = performance.now();
-    if (lastPointer && now - lastPointer.t < 100) {
-      var vx = (x - lastPointer.x) / Math.max(8, now - lastPointer.t);
-      sim.forEach(function (s, i) {
-        var near = Math.abs(x - s.x) < 46 && y > s.y && y < s.y + 150;
-        if (near) push(i, -vx * 90);
-      });
-    }
-    lastPointer = { x: x, y: y, t: now };
-  });
-  ring.addEventListener("pointerleave", function () {
-    lastPointer = null;
-  });
-
-  // Now and then, a breeze.
-  setInterval(function () {
-    if (!visible || document.hidden) return;
-    push(Math.floor(Math.random() * sim.length), (Math.random() - 0.5) * 60);
-  }, 4200);
-
-  if ("IntersectionObserver" in window) {
-    new IntersectionObserver(function (entries) {
-      visible = entries[0].isIntersecting;
-      if (visible) start();
-    }).observe(ring);
-  }
-  document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) start();
-  });
-
-  // A first jingle on arrival.
-  if (!reduced) {
-    setTimeout(function () {
-      push(1, 90);
-      push(3, -70);
-    }, 500);
-  }
 })();
