@@ -262,7 +262,7 @@ async function handleAPI(request, env, url) {
 
 /* -------------------------------------------------------------- identity */
 
-// Landlord powers are the project owner (a seller never buys their own
+// Landlord powers are the project owner (the owning team never buys its own
 // project), or a live subscription or trial of the Landlord tier. Checking
 // the tier name means a tier added later never unlocks them by accident.
 function landlordPlan(headers) {
