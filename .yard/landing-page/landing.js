@@ -156,7 +156,7 @@
           el("a", {
             class: "menu__item",
             role: "menuitem",
-            href: "https://yard.sh/library/security",
+            href: "https://yard.sh/profile/security",
             text: "Connected apps",
           }),
           el("a", { class: "menu__item menu__item--quiet", role: "menuitem", href: LOGOUT, text: "Log out" }),
