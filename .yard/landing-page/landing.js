@@ -233,7 +233,7 @@
     if (!tiers || !tiers.length) return false;
     var tier =
       tiers.find(function (t) {
-        return t.name === "Landlord";
+        return t.key === "landlord";
       }) ||
       tiers.find(function (t) {
         return t.is_default;
@@ -272,7 +272,7 @@
     }
 
     ownership().then(function (state) {
-      if (state && state.owned && (!state.tier_id || state.tier_id === tier.id)) {
+      if (state && state.owned && (!state.tier_key || state.tier_key === tier.key)) {
         document.getElementById("planBadge").hidden = false;
       }
     });

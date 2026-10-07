@@ -38,7 +38,7 @@ const inDialog = (page) => page.locator("dialog[open]");
 test("the landing page builds its pricing from the project's tiers", async () => {
   const page = people.outsider;
   await page.goto("./");
-  const tierId = await page.evaluate(() => window.yard.project.tiers.find((t) => t.name === "Landlord").id);
+  const tierId = await page.evaluate(() => window.yard.project.tiers.find((t) => t.key === "landlord").id);
   await expect(page.locator("#trialBtn")).toHaveAttribute("data-tier-id", tierId);
 });
 

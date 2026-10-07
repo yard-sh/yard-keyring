@@ -24,6 +24,7 @@
   "pricing": {
     "tiers": [
       {
+        "key": "landlord",
         "name": "Landlord",
         "price_cents": 5000,
         "is_default": true,

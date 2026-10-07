@@ -92,10 +92,12 @@ turned away.
 theirs and the Landlord plan to be live: the project owner, or an `active` or
 `trial` entitlement on the Landlord tier. Reads never check the plan. So when
 a trial ends unconverted (it needs no card, so many will), the landlord keeps
-everything, read-only, and their tenants notice nothing. The tier name is the
-`LANDLORD_TIER` constant; rename it together with `settings.json`. The app
-re-reads `api/me` when the window regains focus, because the edge caches
-entitlement for up to a minute and pushes nothing.
+everything, read-only, and their tenants notice nothing. The tier's key,
+`landlord`, is the `LANDLORD_TIER` constant, matched against
+`X-Yard-Tier-Key`. Renaming the tier changes nothing; change its `key` in
+`settings.json` and the constant together. The app re-reads `api/me` when the
+window regains focus, because the edge caches entitlement for up to a minute
+and pushes nothing.
 
 **Rent is computed, never stored.** A lease has a due day (1 to 28), a start
 date, an optional last day, and its rent in `rent_steps`. Every time a ledger
