@@ -11,11 +11,11 @@
 // Two things live in this file. The default export is the fetch handler:
 // properties, units, leases, invites, the rent ledger and its simulated
 // payments, announcements and maintenance requests, all in env.DB. The
-// Property class is a room class: one room per property, declared under
-// "rooms" in .yard/settings.json and reached through env.PROPERTIES. It
-// holds every open connection to that property, relays what happens there to
-// the people it concerns, and buffers request comments until its alarm writes
-// them to the database in one batch.
+// Property class implements the Property room type: one room per property,
+// declared under "rooms" in .yard/settings.json and reached through
+// env.PROPERTIES. It holds every open connection to that property, relays
+// what happens there to the people it concerns, and buffers request comments
+// until its alarm writes them to the database in one batch.
 //
 // Who is who: a property has exactly one landlord (whoever created it), and
 // its tenants are the people on a running lease there. Both come from the

@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "project_slug": "keyring",
   "ignore_files": [],
   "services": [
@@ -11,7 +11,7 @@
       "database_access": true,
       "rooms": [
         {
-          "class": "Property",
+          "type": "Property",
           "binding": "PROPERTIES"
         }
       ]

@@ -38,12 +38,12 @@ Once it's live:
 ## Layout
 
     .yard/
-      settings.json       every project setting: service, room class, landing page, pricing
+      settings.json       every project setting: service, room type, landing page, pricing
       migrations/         properties, units, leases, invites, charges, payments, requests, announcements
       landing-page/       the public page, with a keyring you can jingle and pricing built from the tiers
       dev/                local state written by yard dev; ignored by git
     app/                  the deployable bundle (the services[] entry with dir: app)
-      _service.js         the whole backend: the fetch handler and the Property room class
+      _service.js         the whole backend: the fetch handler and the Property room type
       index.html          app shell: top bar, demo strip, icon sprite
       app.js              boot, routing, portal switch, account menu, invite links, the live connection
       landlord.js         portfolio, rent roll, one unit (lease, people, ledger), property settings
@@ -56,12 +56,12 @@ Once it's live:
       styles.css          navy & sky tokens, light and dark
     tests/                curl and Playwright checks against yard dev; not deployed
 
-The service entry declares its mount, access mode, database, and room class:
+The service entry declares its mount, access mode, database, and room type:
 
     "services": [
       { "dir": "app", "name": "app", "url": "/app",
         "access": "authenticated", "database_access": true,
-        "rooms": [{ "class": "Property", "binding": "PROPERTIES" }] }
+        "rooms": [{ "type": "Property", "binding": "PROPERTIES" }] }
     ]
 
 ## How it fits together
@@ -191,7 +191,7 @@ Two details worth knowing before editing:
 - **Relative URLs only.** The app is mounted at `/<slug>/app/`, so it uses
   `fetch("api/me")`, never `/api/me`. Routes live in `location.hash`, and the
   socket URL is built from `location.href`.
-- **The class name is the identity.** Renaming `Property` in `settings.json`
+- **The type name is the identity.** Renaming `Property` in `settings.json`
   deletes every property room on the next deploy, with any comments still
   in its buffer; `yard push` warns before it does. Change the `binding` if
   only the name in `env` should change.
@@ -340,6 +340,6 @@ to end without money moving.
 - **Removing a tenant** keeps the lease and its ledger as they are.
 - **Withdrawing a request** deletes it and its thread; a comment still in the
   room's buffer for it is dropped at the next flush.
-- **Removing the `Property` class** from `settings.json` deletes every
+- **Removing the `Property` room type** from `settings.json` deletes every
   property room at the next deploy, including comments not yet flushed.
 - **Removing the whole service** keeps room data for 30 days.
