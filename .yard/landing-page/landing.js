@@ -83,7 +83,6 @@
       var res = await fetch(url, {
         credentials: "same-origin",
         headers: { Accept: "application/json" },
-        redirect: "error", // a gate redirect means "not signed in", not data
       });
       if (!res.ok) return null;
       return await res.json();

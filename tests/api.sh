@@ -60,6 +60,11 @@ check() {
   fi
 }
 
+# user_id <persona>: the user id yard dev stamps for the persona.
+user_id() {
+  curl -s -H "Cookie: yard_dev_identity=$1" "$BASE/__yard/auth/me" | jq -r .user_id
+}
+
 # sql <query>: the first column of the first row, from the local database.
 sql() {
   curl -s -X POST -H 'Content-Type: application/json' "$PANEL/db/query" \
@@ -79,8 +84,11 @@ FIRST="$MONTH-01"
 NEXT_MONTH=$(date -u -d "$FIRST +1 month" +%Y-%m)
 
 echo "gate and plan"
-code=$(curl -s -o /dev/null -w '%{http_code}' "$API/me")
-check "anonymous is sent to sign in" "$code" "302"
+STATUS=$(curl -s -o "$TMP/body" -w '%{http_code}' "$API/me")
+BODY=$(cat "$TMP/body")
+expect "an anonymous API call is answered 401" 401 '.error_code == "sign_in_required"'
+code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: text/html' "$API/me")
+check "an anonymous page load is sent to sign in" "$code" "302"
 call "$T" POST properties '{"name":"Nope"}'
 expect "a tenant can't create a property" 403 '.code == "plan_required"'
 call "$L" GET me
@@ -286,14 +294,14 @@ echo "a lapsed landlord is read-only"
 call "$R" POST properties '{"name":"Trial Towers"}'
 expect "a trial landlord can create a property" 201
 P2=$(jq -r .id <<<"$BODY")
-sql "UPDATE properties SET landlord_id = 'dev-persona-signed-in' WHERE id = '$P2'" >/dev/null
+sql "UPDATE properties SET landlord_id = '$(user_id "$T")' WHERE id = '$P2'" >/dev/null
 call "$T" GET "properties/$P2"
 expect "a landlord without the plan still reads" 200 '.role == "landlord" and .can_write == false'
 call "$T" POST "properties/$P2/units" '{"numbers":["1"]}'
 expect "... but can't write" 403 '.code == "plan_required"'
 
 echo "removal"
-call "$L" DELETE "leases/$LID/tenants/dev-persona-trial"
+call "$L" DELETE "leases/$LID/tenants/$(user_id "$R")"
 expect "landlord removes the roommate" 200
 call "$R" GET "leases/$LID"
 expect "the roommate has lost the lease" 404
