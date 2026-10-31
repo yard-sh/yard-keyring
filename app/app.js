@@ -260,8 +260,8 @@ function renderAccount() {
   $("acct-name").textContent = me.name;
   $("acct-email").textContent = me.email || "";
   $("acct-plan").textContent =
-    me.entitlement === "owner"
-      ? "Project owner · Landlord tools included"
+    me.entitlement === "team"
+      ? "Team member · Landlord tools included"
       : me.landlord_plan
         ? me.trial
           ? "Landlord plan · free trial"

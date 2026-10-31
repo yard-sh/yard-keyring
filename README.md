@@ -89,7 +89,7 @@ own pages, so a socket opened from any other site arrives signed out and is
 turned away.
 
 **The server is the paywall.** A landlord *write* needs the property to be
-theirs and the Landlord plan to be live: the project owner, or an `active` or
+theirs and the Landlord plan to be live: a team member, or an `active` or
 `trial` entitlement on the Landlord tier. Reads never check the plan. So when
 a trial ends unconverted (it needs no card, so many will), the landlord keeps
 everything, read-only, and their tenants notice nothing. The tier's key,
@@ -213,7 +213,7 @@ people in and hands the service trusted `X-Yard-*` headers. Locally, a
 | `user:landlord` | a landlord on the paid Landlord plan                           |
 | `trial`         | a landlord on the free trial (also handy as a second tenant)   |
 | `signed-in`     | a tenant: signed in, bought nothing                            |
-| `member`        | you, the project owner, with landlord tools included           |
+| `team`          | you, a team member, with landlord tools included               |
 
 - **Switching:** switch at `http://localhost:9875/keyring/app/__yard/auth/login`,
   or start with `yard dev --as user:landlord`.

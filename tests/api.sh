@@ -9,7 +9,7 @@
 #   user:landlord  the landlord (active Landlord plan)
 #   signed-in      a tenant (signed in, bought nothing)
 #   trial          a roommate (also on a Landlord trial, which doesn't matter here)
-#   member         the project owner, who has nothing to do with this property
+#   team           a team member, who has nothing to do with this property
 #
 # Needs curl and jq. Reads the local database through the yard dev control
 # panel (loopback only) to check what landed where.
@@ -21,7 +21,7 @@ PANEL="${PANEL:-http://localhost:9875/__yard/dev/api}"
 L="user:landlord"
 T="signed-in"
 R="trial"
-O="member"
+O="team"
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT

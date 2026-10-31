@@ -263,12 +263,12 @@ async function handleAPI(request, env, url) {
 
 /* -------------------------------------------------------------- identity */
 
-// Landlord powers are the project owner (the owning team never buys its own
+// Landlord powers are the project's team (the team never buys its own
 // project), or a live subscription or trial of the Landlord tier. Checking
 // the tier key means a tier added later never unlocks them by accident.
 function landlordPlan(headers) {
   const entitlement = headers.get("X-Yard-Entitlement") || "none";
-  if (entitlement === "owner") return true;
+  if (entitlement === "team") return true;
   if (entitlement !== "active" && entitlement !== "trial") return false;
   return headers.get("X-Yard-Tier-Key") === LANDLORD_TIER;
 }

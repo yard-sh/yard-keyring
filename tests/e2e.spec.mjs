@@ -3,7 +3,7 @@
 //   landlord  user:landlord  pays for the Landlord plan
 //   tenant    signed-in      invited to unit 1A
 //   roommate  trial          the second tenant on 1A (also on a Landlord trial)
-//   outsider  member         the project owner, with no part in this property
+//   outsider  team           a team member, with no part in this property
 //
 // The tests run in order and share one story: a property, a lease, two
 // tenants, a request, a payment, and finally removal and deletion. Each test
@@ -26,7 +26,7 @@ test.beforeAll(async ({ browser }) => {
   people.landlord = await person(browser, "user:landlord");
   people.tenant = await person(browser, "signed-in");
   people.roommate = await person(browser, "trial");
-  people.outsider = await person(browser, "member");
+  people.outsider = await person(browser, "team");
 });
 
 test.afterAll(async () => {
